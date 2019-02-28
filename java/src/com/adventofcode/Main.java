@@ -2,6 +2,7 @@ package com.adventofcode;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
@@ -73,125 +74,113 @@ public class Main {
         }
     }
 
-    private int minKey(int key[], boolean mstSet[], int V) {
-        // Initialize min value
-        int min = Integer.MAX_VALUE;
-        int min_index = -1;
-
-        for (int v = 0; v < V; v++)
-            if (!mstSet[v] && key[v] < min && outputs[v] < 2) {
-                min = key[v];
-                min_index = v;
-            }
-
-        return min_index;
-    }
-
-    // Function to construct and print MST for
-// a graph represented using adjacency
-// matrix representation
-    public int[] primMST(int graph[][], int V) {
-        // Array to store constructed MST
-        int parent[] = new int[V];
-        // Key values used to pick minimum weight edge in cut
-        int key[] = new int[V];
-        // To represent set of vertices not yet included in MST
-        boolean mstSet[] = new boolean[V];
-
-        // Initialize all keys as INFINITE
-        for (int i = 0; i < V; i++) {
-            key[i] = Integer.MAX_VALUE;
-            mstSet[i] = false;
-        }
-
-        // Always include first 1st vertex in MST.
-        // Make key 0 so that this vertex is picked as first vertex.
-        key[0] = 0;
-        parent[0] = -1; // First node is always root of MST
-
-        // The MST will have V vertices
-        for (int count = 0; count < V - 1; count++) {
-            // Pick the minimum key vertex from the
-            // set of vertices not yet included in MST
-            int u = minKey(key, mstSet, V);
-
-            // Add the picked vertex to the MST Set
-            mstSet[u] = true;
-
-            // Update key value and parent index of
-            // the adjacent vertices of the picked vertex.
-            // Consider only those vertices which are not
-            // yet included in MST
-            for (int v = 0; v < V; v++)
-
-                // graph[u][v] is non zero only for adjacent vertices of m
-                // mstSet[v] is false for vertices not yet included in MST
-                // Update the key only if graph[u][v] is smaller than key[v]
-                if (graph[u][v] != 0 && !mstSet[v] && graph[u][v] < key[v]) {
-                    parent[v] = u;
-                    outputs[v]++;
-                    key[v] = graph[u][v];
-                }
-        }
-
-        return parent;
-    }
-
     private void orderSlides() {
-        int size = slides.size();
 
-        outputs = new Integer[size];
-        int[][] matrix = new int[size][size];
-        for (int i = 0; i < size; i++) {
-            Slide s1 = slides.get(i);
-            System.out.println("Matirce " + i);
+        List<List<Slide>> bestOfBests = new ArrayList<>();
 
-            for (int j = 0; j < size; j++) {
-                if (j <= i) {
-                    matrix[i][j] = 0;
-                }
-
-                Slide s2 = slides.get(j);
-                matrix[i][j] = -s1.calculateScore(s2);
-            }
-        }
-
-        int parent[] = primMST(matrix, size);
-
-        ArrayList<Slide> inOrdine = new ArrayList<>();
-        inOrdine.add(slides.get(0));
-        for (int i = 1; i < size; i++) {
-            int destinatie = parent[i];
-            inOrdine.add(slides.get(destinatie));
-        }
-
-        slides = inOrdine;
-
-
-        /*List<Slide> best = new ArrayList<>();
+        List<Slide> best = new ArrayList<>();
         best.add(slides.get(0));
         slides.remove(0);
 
-        while(slides.size() > 0) {
-            System.out.println(slides.size());
+        while (slides.size() > 0) {
             Slide reference = best.get(best.size() - 1);
 
-            int scoreMax = 0;
-            Slide useTHISSlide = null;
-            for(Slide test : slides) {
-                int testScore = reference.calculateScore(test);
-                if(testScore > scoreMax) {
-                    useTHISSlide = test;
-                    scoreMax = testScore;
+
+            int partitions = slides.size() / 1000;
+            if (partitions == 0) partitions = 1;
+
+            System.out.println(slides.size());
+            for (int z = 0; z < partitions; z++) {
+                List<Slide> thousand = slides.subList(z, (z + 1) * 1000);
+
+                int scoreMax = 0;
+                Slide useTHISSlide = null;
+                for (Slide test : thousand) {
+                    int testScore = reference.calculateScore(test);
+                    if (testScore > scoreMax) {
+                        useTHISSlide = test;
+                        scoreMax = testScore;
+                    }
+                }
+
+                best.add(useTHISSlide);
+                slides.remove(useTHISSlide);
+            }
+
+            bestOfBests.add(best);
+        }
+
+        for (int i = 0; i < bestOfBests.size(); i++) {
+            List<Slide> boss = bestOfBests.get(0);
+
+            int max = 0;
+            int bestComparare = 0;
+            int bestsIndex = 0;
+
+            for (int j = i + 1; j < bestOfBests.size(); j++) {
+                List<Slide> bests2 = bestOfBests.get(j);
+
+
+                Slide bossInceput = boss.get(0);
+                Slide bossSfarsit = boss.get(boss.size() - 1);
+
+                Slide bestsInceput = bests2.get(0);
+                Slide bestsSfarsit = bests2.get(bests2.size() - 1);
+
+
+                int s = bossInceput.calculateScore(bestsInceput);
+                if (s > max) {
+                    max = s;
+                    bestComparare = 1;
+                    bestsIndex = j;
+                }
+
+                s = bossInceput.calculateScore(bestsSfarsit);
+                if (s > max) {
+                    max = s;
+                    bestComparare = 2;
+                    bestsIndex = j;
+                }
+
+                s = bossSfarsit.calculateScore(bestsInceput);
+                if (s > max) {
+                    max = s;
+                    bestComparare = 3;
+                    bestsIndex = j;
+                }
+
+                s = bossSfarsit.calculateScore(bestsSfarsit);
+                if (s > max) {
+                    max = s;
+                    bestComparare = 4;
+                    bestsIndex = j;
                 }
             }
 
-            best.add(useTHISSlide);
-            slides.remove(slides.indexOf(useTHISSlide));
+            List<Slide> bests2 = bestOfBests.get(bestsIndex);
+            switch (bestComparare) {
+                case 1:
+                    Collections.reverse(boss);
+                    boss.addAll(bests2);
+                    break;
+                case 2:
+                    bests2.addAll(boss);
+                    bestOfBests.set(0, bests2);
+                    break;
+                case 3:
+                    boss.addAll(bests2);
+                    break;
+                case 4:
+                    Collections.reverse(bests2);
+                    boss.addAll(bests2);
+                    break;
+
+            }
+            bestOfBests.remove(bestOfBests.indexOf(bests2));
         }
 
-        slides = best;
-*/
+        slides = bestOfBests.get(0);
+
         /*Graph graph = new Graph(size, size * size);
         for(int i = 0; i < size; i++) {
             Slide s1 = slides.get(i);
