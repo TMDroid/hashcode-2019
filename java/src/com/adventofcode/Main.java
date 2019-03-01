@@ -104,7 +104,7 @@ public class Main {
                 }
 
                 best.add(useTHISSlide);
-                slides.remove(useTHISSlide);
+                thousand.remove(useTHISSlide);
             }
 
             bestOfBests.add(best);
